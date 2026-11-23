@@ -29,4 +29,14 @@ class Reminder extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function histories()
+    {
+        return $this->hasMany(ReminderHistory::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(ReminderNotification::class);
+    }
 }

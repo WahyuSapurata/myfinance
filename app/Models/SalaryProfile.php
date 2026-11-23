@@ -24,6 +24,7 @@ class SalaryProfile extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'pay_day' => 'integer',
         'start_date' => 'date',
         'end_date' => 'date',
         'is_active' => 'boolean',
@@ -44,8 +45,13 @@ class SalaryProfile extends Model
         return $this->belongsTo(Wallet::class);
     }
 
+    // public function transactions()
+    // {
+    //     return $this->hasMany(Transaction::class);
+    // }
+
     public function transactions()
     {
-        return $this->hasMany(Transaction::class);
+        return $this->hasMany(Transaction::class, 'salary_profile_id');
     }
 }

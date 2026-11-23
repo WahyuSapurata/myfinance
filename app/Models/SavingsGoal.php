@@ -18,11 +18,13 @@ class SavingsGoal extends Model
         'icon',
         'color',
         'status',
+        'is_archived',
     ];
 
     protected $casts = [
         'target_amount' => 'decimal:2',
         'target_date' => 'date',
+        'is_archived' => 'boolean',
     ];
 
     public function user()
@@ -33,5 +35,17 @@ class SavingsGoal extends Model
     public function contributions()
     {
         return $this->hasMany(GoalContribution::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasManyThrough(
+            Transaction::class,
+            GoalContribution::class,
+            'savings_goal_id',
+            'id',
+            'id',
+            'transaction_id'
+        );
     }
 }

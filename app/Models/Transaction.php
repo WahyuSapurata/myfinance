@@ -16,6 +16,7 @@ class Transaction extends Model
         'category_id',
         'income_source_id',
         'salary_profile_id',
+        'salary_period',
         'type',
         'amount',
         'transaction_date',
@@ -55,13 +56,19 @@ class Transaction extends Model
         return $this->belongsTo(IncomeSource::class);
     }
 
-    public function salaryProfile()
-    {
-        return $this->belongsTo(SalaryProfile::class);
-    }
+    // public function salaryProfile()
+    // {
+    //     return $this->belongsTo(SalaryProfile::class);
+    // }
 
     public function goalContribution()
     {
         return $this->hasOne(GoalContribution::class);
+    }
+
+
+    public function salaryProfile()
+    {
+        return $this->belongsTo(SalaryProfile::class, 'salary_profile_id');
     }
 }

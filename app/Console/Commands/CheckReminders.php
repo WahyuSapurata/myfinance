@@ -4,19 +4,28 @@ namespace App\Console\Commands;
 
 use App\Models\Reminder;
 use App\Models\ReminderNotification;
+use App\Models\Setting;
 use Illuminate\Console\Command;
 
 class CheckReminders extends Command
 {
     protected $signature = 'reminders:check';
 
-    protected $description = 'Memeriksa dan membuat notifikasi pengingat jatuh tempo';
+    protected $description = 'Memeriksa pengingat jatuh tempo dan membuat notifikasi';
 
     public function handle()
     {
+        $disabledUsers = Setting::where(
+            'key',
+            'reminder_notification_enabled'
+        )
+            ->where('value', '0')
+            ->pluck('user_id');
+
         $now = now();
 
-        $reminders = Reminder::where('status', 'pending')
+        $reminders = Reminder::whereNotIn('user_id', $disabledUsers)
+            ->where('status', 'pending')
             ->whereDate('due_date', '<=', $now->toDateString())
             ->where(function ($query) use ($now) {
                 $query->whereNull('reminder_time')
@@ -44,17 +53,29 @@ class CheckReminders extends Command
             if ($notification->wasRecentlyCreated) {
                 $created++;
 
-                $this->info("Notifikasi dibuat: {$reminder->title}");
+                $this->newLine();
+                $this->info('NOTIFIKASI BARU');
+                $this->line('Judul       : ' . $notification->title);
+                $this->line('Pengingat   : ' . $reminder->title);
+                $this->line('Jatuh Tempo : ' . $reminder->due_date->format('d-m-Y'));
+                $this->line('Pesan       : ' . $notification->message);
+                $this->line('Status      : Belum dibaca');
+
+                $this->line('----------------------------------------');
             } else {
                 $skipped++;
 
-                $this->line("Notifikasi sudah tersedia: {$reminder->title}");
+                $this->line(
+                    "Notifikasi sudah tersedia: {$reminder->title}"
+                );
             }
         }
 
-        $this->info("Total pengingat jatuh tempo: {$reminders->count()}");
-        $this->info("Notifikasi baru dibuat: {$created}");
-        $this->info("Notifikasi dilewati: {$skipped}");
+        $this->newLine();
+        $this->info('PEMERIKSAAN PENGINGAT SELESAI');
+        $this->line('Total pengingat jatuh tempo : ' . $reminders->count());
+        $this->line('Notifikasi baru dibuat      : ' . $created);
+        $this->line('Notifikasi dilewati         : ' . $skipped);
 
         return self::SUCCESS;
     }

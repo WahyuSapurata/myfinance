@@ -3,8 +3,10 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IncomeSourceController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\NotificationSettingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReminderController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SalaryProfileController;
 use App\Http\Controllers\SavingsGoalController;
 use App\Http\Controllers\TransactionController;
@@ -137,6 +139,30 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])
         ->name('notifications.read-all');
+
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])
+        ->name('notifications.destroy');
+
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])
+        ->name('notifications.unread-count');
+
+    Route::get('/notification-settings', [NotificationSettingController::class, 'edit'])
+        ->name('notifications.settings');
+
+    Route::put('/notification-settings', [NotificationSettingController::class, 'update'])
+        ->name('notifications.settings.update');
+
+    Route::get('/reports', [ReportController::class, 'index'])
+        ->name('reports.index');
+
+    Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])
+        ->name('reports.export.excel');
+
+    Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])
+        ->name('reports.export.pdf');
+
+    Route::get('/reports/cash-flow', [ReportController::class, 'cashFlow'])
+        ->name('reports.cash-flow');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

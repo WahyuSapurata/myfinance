@@ -70,11 +70,17 @@
                     Lainnya
                 </div>
 
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-bar-chart me-2"></i>
-                    Laporan
+                <a href="{{ route('reports.index') }}"
+                    class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                    <i class="bi bi-file-earmark-bar-graph me-2"></i>
+                    Laporan Keuangan
                 </a>
 
+                <a href="{{ route('reports.cash-flow') }}"
+                    class="nav-link {{ request()->routeIs('reports.cash-flow') ? 'active' : '' }}">
+                    <i class="bi bi-cash-stack me-2"></i>
+                    Laporan Arus Kas
+                </a>
 
                 <a href="{{ route('reminders.index') }}"
                     class="nav-link {{ request()->routeIs('reminders.*') ? 'active' : '' }}">
@@ -91,15 +97,17 @@
                     </span>
 
                     @if ($unreadNotifications > 0)
-                        <span class="badge bg-danger rounded-pill">
+                        <span id="unread-notification-badge" class="badge bg-danger rounded-pill"
+                            style="{{ $unreadNotifications > 0 ? '' : 'display: none;' }}">
                             {{ $unreadNotifications > 99 ? '99+' : $unreadNotifications }}
                         </span>
                     @endif
                 </a>
 
-                <a href="#" class="nav-link text-white">
+                <a href="{{ route('notifications.settings') }}"
+                    class="nav-link {{ request()->routeIs('notifications.settings*') ? 'active' : '' }}">
                     <i class="bi bi-gear me-2"></i>
-                    Pengaturan
+                    Pengaturan Notifikasi
                 </a>
 
             </nav>
@@ -174,7 +182,134 @@
 
     </div>
 
+    {{-- Chart.js --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     @stack('scripts')
+
+    {{-- Area Toast Notifikasi --}}
+    <div id="notification-toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+    </div>
+
+    @auth
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const badge = document.getElementById('unread-notification-badge');
+                const toastContainer = document.getElementById('notification-toast-container');
+
+                if (!badge || !toastContainer) {
+                    return;
+                }
+
+                let previousCount = null;
+
+                function showNotificationToast() {
+                    const toast = document.createElement('div');
+
+                    toast.className = 'alert alert-primary shadow border-0';
+                    toast.style.minWidth = '280px';
+                    toast.style.maxWidth = '350px';
+
+                    toast.innerHTML = `
+            <div class="d-flex align-items-start">
+                <i class="bi bi-bell-fill me-2 fs-5"></i>
+                <div class="flex-grow-1">
+                    <strong>Notifikasi Baru</strong>
+                    <div class="small">
+                        Anda memiliki notifikasi yang belum dibaca.
+                    </div>
+                    <a href="{{ route('notifications.index') }}"
+                        class="small fw-semibold">
+                        Lihat Notifikasi
+                    </a>
+                </div>
+                <button type="button" class="btn-close ms-2"
+                    aria-label="Tutup"></button>
+            </div>
+        `;
+
+                    toast.querySelector('.btn-close').addEventListener('click', function() {
+                        toast.remove();
+                    });
+
+                    toastContainer.appendChild(toast);
+
+                    setTimeout(function() {
+                        toast.remove();
+                    }, 6000);
+                }
+
+                function showBrowserNotification(count) {
+                    const browserNotificationEnabled =
+                        @json(\App\Models\Setting::getValue('browser_notification_enabled', '1') == '1');
+
+                    if (!browserNotificationEnabled) {
+                        return;
+                    }
+
+                    if (!('Notification' in window)) {
+                        return;
+                    }
+
+                    if (Notification.permission !== 'granted') {
+                        return;
+                    }
+
+                    const notification = new Notification('MyFinance - Notifikasi Baru', {
+                        body: count + ' pengingat baru telah jatuh tempo.',
+                        icon: '/favicon.ico',
+                        tag: 'myfinance-reminder'
+                    });
+
+                    notification.onclick = function() {
+                        window.focus();
+                        window.location.href = "{{ route('notifications.index') }}";
+                        notification.close();
+                    };
+                }
+
+                async function updateUnreadNotifications() {
+                    try {
+                        const response = await fetch(
+                            "{{ route('notifications.unread-count') }}", {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            }
+                        );
+
+                        if (!response.ok) return;
+
+                        const data = await response.json();
+                        const count = Number(data.count) || 0;
+
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.style.display = count > 0 ? '' : 'none';
+
+                        if (previousCount !== null && count > previousCount) {
+                            const newCount = count - previousCount;
+
+                            // Tampilkan pop-up di halaman
+                            showNotificationToast(newCount);
+
+                            // Tampilkan notifikasi sistem browser
+                            showBrowserNotification(newCount);
+                        }
+
+                        previousCount = count;
+
+                    } catch (error) {
+                        console.error('Gagal memperbarui notifikasi:', error);
+                    }
+                }
+
+                updateUnreadNotifications();
+
+                setInterval(updateUnreadNotifications, 10000);
+            });
+        </script>
+    @endauth
 
 </body>
 

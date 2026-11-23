@@ -8,6 +8,8 @@ use App\Models\SavingsGoal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\Reminder;
+use App\Models\ReminderNotification;
 
 class DashboardController extends Controller
 {
@@ -135,6 +137,23 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Jumlah notifikasi yang belum dibaca
+        $unreadNotifications = ReminderNotification::where('user_id', $userId)
+            ->whereNull('read_at')
+            ->count();
+
+        // Jumlah pengingat yang sudah jatuh tempo
+        $overdueReminders = Reminder::where('user_id', $userId)
+            ->where('status', 'pending')
+            ->whereDate('due_date', '<', now()->toDateString())
+            ->count();
+
+        // Lima notifikasi terbaru
+        $recentNotifications = ReminderNotification::where('user_id', $userId)
+            ->latest()
+            ->limit(5)
+            ->get();
+
         return view('dashboard', compact(
             'totalBalance',
             'monthlyIncome',
@@ -144,7 +163,10 @@ class DashboardController extends Controller
             'chartIncome',
             'chartExpense',
             'recentTransactions',
-            'savingsGoals'
+            'savingsGoals',
+            'unreadNotifications',
+            'overdueReminders',
+            'recentNotifications',
         ));
     }
 }

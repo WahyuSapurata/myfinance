@@ -83,6 +83,112 @@
 
     </div>
 
+
+    {{-- Ringkasan Notifikasi --}}
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-secondary">Notifikasi Belum Dibaca</span>
+                            <h3 class="fw-bold mt-2 mb-1">
+                                {{ $unreadNotifications }}
+                            </h3>
+                            <small class="text-secondary">
+                                Notifikasi yang perlu diperiksa
+                            </small>
+                        </div>
+                        <i class="bi bi-bell text-primary fs-1"></i>
+                    </div>
+
+                    <a href="{{ route('notifications.index') }}" class="btn btn-sm btn-outline-primary mt-3">
+                        Lihat Notifikasi
+                        <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-secondary">Pengingat Terlambat</span>
+                            <h3 class="fw-bold text-danger mt-2 mb-1">
+                                {{ $overdueReminders }}
+                            </h3>
+                            <small class="text-secondary">
+                                Pengingat yang melewati tanggal jatuh tempo
+                            </small>
+                        </div>
+                        <i class="bi bi-calendar-x text-danger fs-1"></i>
+                    </div>
+
+                    <a href="{{ route('reminders.index') }}" class="btn btn-sm btn-outline-danger mt-3">
+                        Lihat Pengingat
+                        <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- Notifikasi Terbaru --}}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Notifikasi Terbaru</h5>
+
+                <a href="{{ route('notifications.index') }}" class="btn btn-sm btn-outline-primary">
+                    Lihat Semua
+                </a>
+            </div>
+
+            @forelse ($recentNotifications as $notification)
+                <div class="d-flex align-items-start justify-content-between border-bottom py-3">
+
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-bell-fill text-primary me-3 mt-1"></i>
+
+                        <div>
+                            <div class="fw-semibold">
+                                {{ $notification->title }}
+                            </div>
+
+                            <div class="text-secondary small">
+                                {{ $notification->message }}
+                            </div>
+
+                            <small class="text-secondary">
+                                {{ $notification->created_at->format('d M Y H:i') }}
+                            </small>
+                        </div>
+                    </div>
+
+                    @if (!$notification->read_at)
+                        <span class="badge bg-primary">Baru</span>
+                    @else
+                        <span class="badge bg-secondary">Dibaca</span>
+                    @endif
+
+                </div>
+            @empty
+                <div class="text-center py-4">
+                    <i class="bi bi-bell-slash fs-1 text-secondary"></i>
+                    <p class="text-secondary mt-2 mb-0">
+                        Belum ada notifikasi.
+                    </p>
+                </div>
+            @endforelse
+
+        </div>
+    </div>
+
     {{-- Grafik dan Target Tabungan --}}
     <div class="row g-3 mb-4">
 
